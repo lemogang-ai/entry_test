@@ -145,7 +145,10 @@ Protection works by compensating LPs for the loss between value they have in poo
 
 [2–3 sentences synthesising these concepts into a coherent explanation]  
 
----
+--- AMM use the formula (X x y = k ) to correctly calculate swap output.
+    This can lead to impermanent loss for LPs when asset prices changes compared to the pool ratio, 
+    but this is where impermanent loss proctection can compensate for those losses . 
+    ERC-1155 is most often because of the its gas-efficiency 
 
 ## SUBMISSION CHECKLIST
 
@@ -157,4 +160,5 @@ Protection works by compensating LPs for the loss between value they have in poo
 
 ---
 
-**Challenges faced:** [What was difficult? Which concepts are you less confident about?]  
+**Challenges faced:** [What was difficult? Which concepts are you less confident about?] 
+AMM and pools  
