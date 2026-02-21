@@ -80,8 +80,9 @@ With 10,000+ entries or bounties, performance can become a concern, especially f
 
 [Write about your UX(user experience) considerations]
 
----
-
+---For onboarding, I would simplify the process by providing clear instructions and integrating wallet onboarding tools that guide users step-by-step. 
+To support users without MetaMask, I would offer alternatives like WalletConnect, Coinbase Wallet, or browser-native wallets, enabling broader access. 
+For mobile accessibility, I  would ensure the frontend is responsive and compatible with mobile wallet apps, allowing users to interact with the contracts easily from their smartphones.
 ## MY LEARNING APPROACH
 
 ### Resources I Used
@@ -93,7 +94,8 @@ With 10,000+ entries or bounties, performance can become a concern, especially f
 
 [List 3-5 resources you used]
 
----
+---Tutorials followed
+Documenation consulted 
 
 ### Challenges Faced
 
