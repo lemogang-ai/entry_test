@@ -16,7 +16,10 @@
 
 [Write your response here]
 
----
+---You would choose to use a mapping instead of an array when you need fast direct access to data by addresses or ID
+-In FreelanceBountyBoard i used mappings to connect freelancer addresses with their skills and to store bounties by their IDs
+and in DecentralizedRaffle i had to track all entries so i used an array and mapppings to track entry counts  
+-Mappings are more storage efficiency for scattered datasets and fast lookups , but can't be iterated over directly . Arrays allow iteration and ordering but can become expensive 
 
 ### 2. Security Measures
 **What attacks did you protect against in BOTH implementations?**
@@ -27,7 +30,11 @@
 
 [Write your response here]
 
----
+---I protected against reentrancy attacks by following the Checks-Effects-Interactions pattern: state variables are updated before any external calls, and in DecentralisedRaffle I used a 'nonReentrant' modifier for functions that transfer ETH. 
+-Access control vulnerabilities are mitigated by restricting sensitive functions with 'onlyOwner' (for raffle management) and by checking employer/freelancer roles in FreelanceBountyBoard. 
+-Integer overflow and underflow are prevented by using Solidity 0.8+, which has built-in overflow checks. 
+-For front-running and randomness manipulation in DecentralisedRaffle, I combined blockhash, block.prevrandao, and raffleId in the randomness calculation to make it harder for attackers to predict or manipulate the outcome.
+
 
 ### 3. Trade-offs & Future Improvements
 **What would you change with more time?**
@@ -37,7 +44,7 @@
 
 [Write your response here]
 
----
+---With more time, I would optimize gas usage by minimizing storage writes and using more efficient data structures. I would also improve error handling by using custom errors and more descriptive revert messages, and consider integrating OpenZeppelin libraries for additional security and upgradeability.
 
 ## REAL-WORLD DEPLOYMENT CONCERNS
 
@@ -49,7 +56,9 @@
 
 [Write your response here]
 
----
+---Gas Costs
+
+Estimated gas for key functions like 'postBounty' and 'selectWinner' is moderate, as both rely on simple storage operations and avoid expensive loops. 'postBounty' mainly writes to mappings and emits events, while 'selectWinner' uses array access and ETH transfers. For users in constrained environments or during periods of high gas fees. Optimization strategies include using mappings for fast lookups, minimizing storage writes, and following the checks-effects-interactions pattern to reduce risk and cost. 
 
 ### 2. Scalability
 **What happens with 10,000+ entries/bounties?**
@@ -60,6 +69,7 @@
 [Write your response here]
 
 ---
+With 10,000+ entries or bounties, performance can become a concern, especially for functions that loop through large arrays. In DecentralisedRaffle, selecting a winner from a large 'entries' array could increase gas costs and risk exceeding block gas limits. Similarly, in FreelanceBountyBoard, iterating over many bounties or freelancers would be expensive. Storage costs also grow linearly with the number of entries, impacting long-term viability. Potential bottlenecks include the 'selectWinner' function (due to array access) and any function that requires searching or iterating through large datasets. 
 
 ### User Experience
 

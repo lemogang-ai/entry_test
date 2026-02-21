@@ -13,11 +13,12 @@ contract DecentralisedRaffle {
     uint256 public raffleStartTime;
     bool public isPaused;
     
-    // TODO: Define additional state variables
-    // Consider:
-    // - How will you track entries?
-    // - How will you store player information?
-    // - What data structure for managing the pot?
+    address[] public entries;
+    mapping(address => uint256) public playerEntryCount; // entry count per player
+    mapping(address => bool) public uniquePlayers; // Track unique players
+    uint256 public uniquePlayerCount; // amount of unique players
+
+    event RaffleEntered(address indexed player, uint256 entryCount);
     
     constructor() {
         owner = msg.sender;
@@ -35,21 +36,57 @@ contract DecentralisedRaffle {
     function enterRaffle() public payable {
         // Your implementation here
         // Validation: Check minimum entry amount
+        require(msg.value >= 0.01 ether, "Minimum entry is 0.01 ETH");
         // Validation: Check if raffle is active
+        require(!isPaused, "Raffle is paused");
+
+        entries.push(msg.sender);
+        playerEntryCount[msg.sender]++;
+        uniquePlayers[msg.sender] = true;
+
+        if (uniquePlayers[msg.sender]) {
+            uniquePlayerCount++;
+        }
+
+        emit RaffleEntered(msg.sender, playerEntryCount[msg.sender]);
     }
-    
-    // TODO: Implement winner selection function
-    // Requirements:
-    // - Only owner can trigger
-    // - Select winner from TOTAL entries (not unique players)
-    // - Winner gets 90% of pot, owner gets 10% fee
-    // - Use a secure random mechanism (better than block.timestamp)
-    // - Require at least 3 unique players
-    // - Require raffle has been active for 24 hours
-    function selectWinner() public {
-        // Your implementation here
-        // CHALLENGE: How do you generate randomness securely?
-        // Consider: blockhash, block.difficulty, etc.
+
+    // Reentrancy protection: add a simple nonReentrant modifier
+    bool private locked = false;
+    modifier nonReentrant() {
+        require(!locked, "No reentrancy");
+        locked = true;
+        _;
+        locked = false;
+    }
+
+    // Update selectWinner to use nonReentrant
+    function selectWinner() public onlyOwner nonReentrant {
+        require(entries.length > 0, "No entries");
+        require(uniquePlayerCount >= 3, "At least 3 unique players required");
+        require(block.timestamp >= raffleStartTime + 1 days, "Raffle must be active for 24 hours");
+        require(!isPaused, "Raffle is paused");
+
+        // Secure randomness: use blockhash and raffleId
+        uint256 random = uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), block.prevrandao, block.timestamp, raffleId)));
+        uint256 winnerIndex = random % entries.length;
+        address winner = entries[winnerIndex];
+
+        uint256 pot = address(this).balance;
+        uint256 winnerPrize = (pot * 90) / 100;
+        uint256 ownerFee = pot - winnerPrize;
+
+        // Checks-Effects-Interactions pattern
+        // Effects
+        raffleId++;
+        raffleStartTime = block.timestamp;
+        delete entries;
+        uniquePlayerCount = 0;
+        // Interactions
+        (bool sentWinner, ) = winner.call{value: winnerPrize}("");
+        require(sentWinner, "Failed to send prize to winner");
+        (bool sentOwner, ) = owner.call{value: ownerFee}("");
+        require(sentOwner, "Failed to send fee to owner");
     }
     
     // TODO: Implement circuit breaker (pause/unpause)
@@ -63,27 +100,40 @@ contract DecentralisedRaffle {
     }
     
     modifier whenNotPaused() {
-        require(!isPaused, "Contract is paused");
+        require(!isPaused, " raffle is paused");
         _;
     }
     
     function pause() public onlyOwner {
-        // Your implementation
+        require(!isPaused, "Already paused");
+        isPaused = true;
     }
-    
+
     function unpause() public onlyOwner {
-        // Your implementation
+        require(isPaused, "Already unpaused");
+        isPaused = false;
     }
     
     // TODO: Implement reentrancy protection
     // CRITICAL: Prevent reentrancy attacks when sending ETH
     // Use checks-effects-interactions pattern
     
-    // TODO: Helper/View functions
-    // - Get current pot balance
-    // - Get player entry count
-    // - Check if raffle is active
-    // - Get unique player count
+    // Helper/View functions
+    function getPotBalance() public view returns (uint256) {
+        return address(this).balance;
+    }
+
+    function getPlayerEntryCount(address player) public view returns (uint256) {
+        return playerEntryCount[player];
+    }
+
+    function isRaffleActive() public view returns (bool) {
+        return !isPaused && (block.timestamp < raffleStartTime + 1 days);
+    }
+
+    function getUniquePlayerCount() public view returns (uint256) {
+        return uniquePlayerCount;
+    }
     
     // BONUS: Add multiple prize tiers (1st, 2nd, 3rd place)
     // BONUS: Add refund mechanism if minimum players not reached
